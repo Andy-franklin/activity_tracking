@@ -1,0 +1,14 @@
+﻿,Date,Timezone,Task,Author,Team,Source,Author Timezone
+,2019-04-02 05:34 PM,Europe/London,#home,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 05:15 PM,Europe/London,#awards pr awards support,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 03:08 PM,Europe/London,#resume,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 03:05 PM,Europe/London,#tea,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 02:16 PM,Europe/London,#TDR dashboard,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 02:05 PM,Europe/London,#awards TheDrumPr Support,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 01:27 PM,Europe/London,#resume,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 12:39 PM,Europe/London,#lunch,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 11:58 AM,Europe/London,#TDR dashboard,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 11:47 AM,Europe/London,#awards RAR awards updating an agency logo across entries,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 10:42 AM,Europe/London,#resume,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 10:39 AM,Europe/London,#break,Andy Franklin,The Drum,,Europe/London
+,2019-04-02 09:01 AM,Europe/London,#TDR dashboard,Andy Franklin,The Drum,,Europe/London
