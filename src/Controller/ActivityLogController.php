@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ActivityLog;
+use App\EventSubscriber\ActivityLogUploadSubscriber;
 use App\Form\ActivityLogType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,13 +19,23 @@ class ActivityLogController extends AbstractController
     private $entityManager;
 
     /**
+     * @var ActivityLogUploadSubscriber
+     */
+    private $activityLogUploadSubscriber;
+
+    /**
      * ActivityLogController constructor.
      *
-     * @param EntityManagerInterface $entityManager
+     * @param EntityManagerInterface      $entityManager
+     * @param ActivityLogUploadSubscriber $activityLogUploadSubscriber
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ActivityLogUploadSubscriber $activityLogUploadSubscriber
+    )
     {
         $this->entityManager = $entityManager;
+        $this->activityLogUploadSubscriber = $activityLogUploadSubscriber;
     }
 
     public function new(Request $request)
@@ -56,6 +67,8 @@ class ActivityLogController extends AbstractController
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Your file has been added to the queue for processing');
+            $this->activityLogUploadSubscriber->setActivityLog($activityLog);
+
             return $this->redirectToRoute('index');
         }
 
