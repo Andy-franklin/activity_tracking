@@ -95,6 +95,9 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
 
         array_shift($rawActivityData);
 
+        //Reverse the order of the array as workingon order is newest first
+        $rawActivityData = array_reverse($rawActivityData);
+
         $user = $this->activityLog->getUser();
         $activityItems = [];
 
