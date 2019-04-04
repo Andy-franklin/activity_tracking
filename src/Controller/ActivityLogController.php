@@ -69,7 +69,7 @@ class ActivityLogController extends AbstractController
             $this->addFlash('success', 'Your file has been added to the queue for processing');
             $this->activityLogUploadSubscriber->setActivityLog($activityLog);
 
-            return $this->redirectToRoute('index');
+//            return $this->redirectToRoute('index'); //todo: put this back in
         }
 
         return $this->render('activityLog/new.html.twig', [
