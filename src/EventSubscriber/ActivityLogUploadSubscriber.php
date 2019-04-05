@@ -4,7 +4,9 @@ namespace App\EventSubscriber;
 
 use App\Entity\ActivityItem;
 use App\Entity\ActivityLog;
+use App\Entity\Author;
 use App\Entity\Tag;
+use App\Repository\AuthorRepository;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -32,6 +34,10 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
      * @var TagRepository
      */
     private $tagRepository;
+    /**
+     * @var AuthorRepository
+     */
+    private $authorRepository;
 
     /**
      * ActivityLogUploadSubscriber constructor.
@@ -39,16 +45,19 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
      * @param string                 $activityLogDirectory
      * @param EntityManagerInterface $entityManager
      * @param TagRepository          $tagRepository
+     * @param AuthorRepository       $authorRepository
      */
     public function __construct(
         string $activityLogDirectory,
         EntityManagerInterface $entityManager,
-        TagRepository $tagRepository
+        TagRepository $tagRepository,
+        AuthorRepository $authorRepository
     )
     {
         $this->activityLogDirectory = $activityLogDirectory;
         $this->entityManager = $entityManager;
         $this->tagRepository = $tagRepository;
+        $this->authorRepository = $authorRepository;
     }
 
 
@@ -102,7 +111,13 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
         $activityItems = [];
 
         foreach ($rawActivityData as $rawActivityDatum) {
-            $rawAuthor = $rawActivityDatum[4]; //todo refactor with list()
+            $rawAuthor = $rawActivityDatum[4];
+
+            $author = $this->authorRepository->findOneBy(['name' => $rawAuthor, 'user' => $user]);
+            if (null === $author) {
+                $author = new Author($rawAuthor, $user);
+            }
+
             $rawTitle = $rawActivityDatum[3];
             $rawStartTime = $rawActivityDatum[1];
             $rawTags = $this->extractTagStrings($rawTitle);
@@ -122,7 +137,7 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
             }
 
             //Set the current activityItem
-            $activityItem = new ActivityItem($rawTitle, $tags, $rawAuthor, $startTime, $this->activityLog);
+            $activityItem = new ActivityItem($rawTitle, $tags, $author, $startTime, $this->activityLog);
             $this->entityManager->persist($activityItem);
             $activityItems[] = $activityItem;
 

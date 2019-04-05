@@ -29,7 +29,7 @@ class ActivityItem
     private $tags;
 
     /**
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\ManyToOne(targetEntity="Author", cascade={"persist"})
      */
     private $author;
 
@@ -54,11 +54,11 @@ class ActivityItem
      *
      * @param string      $title
      * @param             $tags
-     * @param string      $author
+     * @param Author      $author
      * @param \DateTime   $startTime
      * @param ActivityLog $activityLog
      */
-    public function __construct(string $title, $tags, string $author, \DateTime $startTime, ActivityLog $activityLog)
+    public function __construct(string $title, $tags, Author $author, \DateTime $startTime, ActivityLog $activityLog)
     {
         $this->title     = $title;
         $this->tags      = $tags;

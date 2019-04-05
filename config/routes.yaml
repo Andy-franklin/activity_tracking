@@ -4,8 +4,12 @@ index:
 
 
 activity_log_new:
-    path: /activitylog/new
+    path: /authed/activitylog/new
     controller: App\Controller\ActivityLogController::new
+
+project_new:
+    path: /authed/project/new
+    controller: App\Controller\ProjectController::new
 
 fos_user:
     resource: "@FOSUserBundle/Resources/config/routing/all.xml"
