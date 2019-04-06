@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>{{ project.title }}</h1>
+    <h2>Planner</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Author</th>
+                <th>Planned Hours</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Andy Franklin</td> {# todo #}
+                <td>
+                    <input type="number" placeholder="hours"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button>Update</button>
+
+
+    <h2>Current Week Activity</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Author</th>
+                <th>Activity</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activityItem in projectActivities %}
+                <tr>
+                    <td>{{ activityItem.author.name }}</td>
+                    <td>{{ activityItem.title }}</td>
+                    <td>{{ activityItem.duration|carbonInterval }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Total Author Duration</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Author</th>
+            <th>Time</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for author, duration in authorDurations %}
+            <tr>
+                <td>{{ author }}</td>
+                <td>{{ duration|carbonInterval }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2>Tags</h2>
+    <h3>Current tags</h3>
+    {% for tag in project.tags %}
+        {{ tag.name }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    {# Form to add/remove tags here #}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {% if app.user %}
+        <a href="{{ path('authed_dashboard') }}">Dashboard</a>
+    {% else %}
+        <a href="{{ path('fos_user_security_login') }}">Login</a>
+        <a href="{{ path('fos_user_registration_register') }}">Register</a>
+    {% endif %}
+{% endblock %}

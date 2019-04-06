@@ -6,7 +6,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="App\Repository\ProjectRepository")
  * @ORM\Table(name="project")
  */
 class Project
@@ -24,7 +24,7 @@ class Project
     private $user;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Tag")
+     * @ORM\ManyToMany(targetEntity="Tag", inversedBy="projects")
      * @ORM\JoinColumn(name="tag_id", referencedColumnName="id")
      */
     private $tags;
@@ -62,5 +62,10 @@ class Project
     public function getTags()
     {
         return $this->tags;
+    }
+
+    public function getId()
+    {
+        return $this->id;
     }
 }

@@ -2,6 +2,9 @@ index:
     path: /
     controller: App\Controller\DefaultController::index
 
+authed_dashboard:
+    path: /authed
+    controller: App\Controller\AuthedController::index
 
 activity_log_new:
     path: /authed/activitylog/new
@@ -10,6 +13,10 @@ activity_log_new:
 project_new:
     path: /authed/project/new
     controller: App\Controller\ProjectController::new
+
+project_single:
+    path: /authed/project/{project}
+    controller: App\Controller\ProjectController::single
 
 fos_user:
     resource: "@FOSUserBundle/Resources/config/routing/all.xml"

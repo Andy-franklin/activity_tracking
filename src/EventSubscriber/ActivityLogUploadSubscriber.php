@@ -133,6 +133,8 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
                     $tag = new Tag($rawTag, $user);
                     $this->entityManager->persist($tag);
                     $tags[] = $tag;
+                } else {
+                    $tags [] = $existingTag;
                 }
             }
 

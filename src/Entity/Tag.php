@@ -23,10 +23,22 @@ class Tag
     private $name;
 
     /**
-     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="tags")
      * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
      */
     private $user;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Project", mappedBy="tags")
+     * @ORM\JoinColumn(name="project_id", referencedColumnName="id")
+     */
+    private $projects;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="ActivityItem", mappedBy="tags")
+     * @ORM\JoinColumn(name="activity_item_id", referencedColumnName="id")
+     */
+    private $activityItems;
 
     /**
      * Tag constructor.

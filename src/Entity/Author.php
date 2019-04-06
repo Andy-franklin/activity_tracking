@@ -38,4 +38,12 @@ class Author
         $this->name = $name;
         $this->user = $user;
     }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
 }

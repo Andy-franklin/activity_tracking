@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Dashboard</h1>
+    <h2>Projects</h2>
+    <a href="{{ path('project_new') }}">New project</a>
+    <ul>
+    {% for project in projects %}
+        <li><a href="{{ path('project_single', {project: project.id}) }}">{{ project.title }}</a></li>
+    {% endfor %}
+    </ul>
+    <h2>Activity Logs</h2>
+    <a href="{{ path('activity_log_new') }}">New activity log</a>
+    <ul>
+    {% for activityLog in activityLogs %}
+        <li><a href="">{{ activityLog.id }}</a></li>
+    {% endfor %}
+    </ul>
+    <h2>Author Breakdown</h2>
+    <p>Authors are added directly from your activity logs</p>
+    <ul>
+    {% for author in authors %}
+        <li><a href="">{{ author.name }}</a></li>
+    {% endfor %}
+    </ul>
+
+    <h2>Global Tag Configuration</h2>
+    <p>These configurations will apply for all authors.<br/>Allow the author to configure their own under Author breakdown.</p>
+    <ul>
+        <li><a href="" >Task Resume</a></li>
+        <li><a href="" >Task Pause</a></li>
+        <li><a href="" >Redmine Integration</a></li>
+    </ul>
+{% endblock %}

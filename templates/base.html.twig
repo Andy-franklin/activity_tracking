@@ -6,11 +6,11 @@
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success">
+        {% block messages %}
+            {% for message in app.flashes('success') %}
                 {{ message }}
-            </div>
-        {% endfor %}
+            {% endfor %}
+        {% endblock %}
         {% block body %}{% endblock %}
         {% block javascripts %}{% endblock %}
     </body>
