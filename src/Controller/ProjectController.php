@@ -3,9 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\ActivityItem;
+use App\Entity\Author;
+use App\Entity\PlannedHours;
 use App\Entity\Project;
 use App\Form\ProjectType;
 use App\Repository\ActivityItemRepository;
+use App\Repository\AuthorRepository;
+use App\Repository\PlannedHoursRepository;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +29,14 @@ class ProjectController extends AbstractController
      * @var ActivityItemRepository
      */
     private $activityItemRepository;
+    /**
+     * @var AuthorRepository
+     */
+    private $authorRepository;
+    /**
+     * @var PlannedHoursRepository
+     */
+    private $plannedHoursRepository;
 
     /**
      * ProjectController constructor.
@@ -32,16 +44,22 @@ class ProjectController extends AbstractController
      * @param EntityManagerInterface $entityManager
      * @param ProjectRepository      $projectRepository
      * @param ActivityItemRepository $activityItemRepository
+     * @param AuthorRepository       $authorRepository
+     * @param PlannedHoursRepository $plannedHoursRepository
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         ProjectRepository $projectRepository,
-        ActivityItemRepository $activityItemRepository
+        ActivityItemRepository $activityItemRepository,
+        AuthorRepository $authorRepository,
+        PlannedHoursRepository $plannedHoursRepository
     )
     {
         $this->entityManager = $entityManager;
         $this->projectRepository = $projectRepository;
         $this->activityItemRepository = $activityItemRepository;
+        $this->authorRepository = $authorRepository;
+        $this->plannedHoursRepository = $plannedHoursRepository;
     }
 
     public function new(Request $request)
@@ -68,26 +86,72 @@ class ProjectController extends AbstractController
         ]);
     }
 
-    public function single(Project $project)
+    public function single(Request $request, Project $project)
     {
-        $monday = new \DateTime('Monday this week');
-        $saturday = new \DateTime('Saturday this week');
-        $projectActivities = $this->activityItemRepository->findActivitiesForProjectInDateRange($project, $monday, $saturday);
+        $weekCommencing = $request->get('weekCommencing');
+        if (null !== $weekCommencing) {
+            try {
+                $monday = \DateTimeImmutable::createFromFormat('d-m-Y', $weekCommencing)->setTime(0,0,0,0);
+                $sunday = $monday->add(\DateInterval::createFromDateString('+ 7 days'));
+                if ($monday->format('l') !== 'Monday') {
+                    //If we aren't on a monday throw an error
+                    throw new \RuntimeException(sprintf('Expected Monday but got %s', $monday->format('l')));
+                }
+            } catch (\RuntimeException $runtimeException) {
+                throw $runtimeException;
+            } catch (\Exception $exception) {
+                throw new \RuntimeException('The date format is incorrect');
+            }
+        } else {
+            $monday = new \DateTime('Monday this week');
+            $sunday = new \DateTime('Sunday this week');
+        }
+
+        $projectActivities = $this->activityItemRepository->findActivitiesForProjectInDateRange($project, $monday, $sunday);
 
         /** @var ActivityItem $activity */
         $authorDurations = [];
         foreach ($projectActivities as $activity) {
-            if (isset($authorDurations[$activity->getAuthor()->getName()])) {
-                $interval = $authorDurations[$activity->getAuthor()->getName()];
+            $author = $activity->getAuthor();
+            $authorId = $author->getId();
+            if (isset($authorDurations[$authorId])) {
+                $interval = $authorDurations[$authorId]['duration'];
                 $interval = $this->addDateIntervals($interval, $activity->getDuration());
             } else {
                 $interval = $activity->getDuration();
             }
 
-            $authorDurations[$activity->getAuthor()->getName()] = $interval;
+            $authorDurations[$authorId] = [
+                'duration' => $interval,
+                'authorName' => $author->getName()
+            ];
+        }
+
+        $authors = $this->authorRepository->findBy(['user' => $this->getUser()]);
+        /** @var Author $author */
+        foreach ($authors as $author) {
+            $authorId = $author->getId();
+
+            /** @var PlannedHours $authorPlannedHours */
+            $authorPlannedHours = $this->plannedHoursRepository->findOneBy([
+                'weekCommencing' => $monday,
+                'author' => $author,
+                'project' => $project
+            ]);
+
+            if (!isset($authorDurations[$authorId])) {
+                $authorDurations[$authorId] = [
+                    'duration' => new \DateInterval('PT00S'),
+                    'authorName' => $author->getName(),
+                ];
+            }
+
+            $authorDurations[$authorId]['plannedHours'] = $authorPlannedHours === null ? 0 : $authorPlannedHours->getHours();
         }
 
         return $this->render('project/single.html.twig', [
+            'monday' => $monday,
+            'saturday' => $sunday,
             'project' => $project,
             'projectActivities' => $projectActivities,
             'authorDurations' => $authorDurations

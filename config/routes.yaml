@@ -18,5 +18,10 @@ project_single:
     path: /authed/project/{project}
     controller: App\Controller\ProjectController::single
 
+planned_hours_create_or_update:
+    path: /authed/api/plannedhours/create
+    controller: App\Controller\PlannedHoursController::createOrUpdate
+    methods: [POST]
+
 fos_user:
     resource: "@FOSUserBundle/Resources/config/routing/all.xml"

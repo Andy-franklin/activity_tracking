@@ -1,0 +1,38 @@
+<div class="container-fluid mt-4">
+    <div class="row justify-content-around mb-4 js-calendar-nav" data-weekCommencing="{{ monday|date('d-m-Y') }}">
+        <div class="col-4">
+            <button type="button" class="btn btn-outline-primary js-previous">< Prev</button>
+        </div>
+        <div class="col-4 text-center">
+            <h4>{{ monday|date("d M") }} - {{ saturday|date("d M") }}</h4>
+        </div>
+        <div class="col-4 text-right">
+            <button type="button" class="btn btn-outline-primary js-next">Next ></button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Author</th>
+                    <th>Planned Hours</th>
+                    <th>Actual Hours</th>
+                </tr>
+                </thead>
+                <tbody class="js-planned-hours" data-project="{{ project.id }}">
+                    {% for authorId, author in authorDurations %}
+                        <tr data-author-id="{{ authorId }}">
+                            <td>{{ author.authorName }}</td>
+                            <td>
+                                <input type="number" placeholder="hours" value="{{ author.plannedHours }}"/>
+                            </td>
+                            <td>{{ author.duration|carbonInterval }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-outline-success js-planned-hours">Update</button>
+    </div>
+</div>

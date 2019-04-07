@@ -1,68 +1,112 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <h1>{{ project.title }}</h1>
-    <h2>Planner</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Author</th>
-                <th>Planned Hours</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Andy Franklin</td> {# todo #}
-                <td>
-                    <input type="number" placeholder="hours"/>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <button>Update</button>
+    <div class="container">
+        <h1>{{ project.title }}</h1>
+        {% include 'planner/calendar.html.twig' %}
+        <hr/>
 
-
-    <h2>Current Week Activity</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Author</th>
-                <th>Activity</th>
-                <th>Duration</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for activityItem in projectActivities %}
+        <h2>Current Week Activity</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
                 <tr>
-                    <td>{{ activityItem.author.name }}</td>
-                    <td>{{ activityItem.title }}</td>
-                    <td>{{ activityItem.duration|carbonInterval }}</td>
+                    <th>Author</th>
+                    <th>Activity</th>
+                    <th>Day</th>
+                    <th>Duration</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                {% for activityItem in projectActivities %}
+                    <tr>
+                        <td>{{ activityItem.author.name }}</td>
+                        <td>{{ activityItem.title }}</td>
+                        <td>{{ activityItem.startTime|date('l') }}</td>
+                        <td>{{ activityItem.duration|carbonInterval }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    <h2>Total Author Duration</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Author</th>
-            <th>Time</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for author, duration in authorDurations %}
-            <tr>
-                <td>{{ author }}</td>
-                <td>{{ duration|carbonInterval }}</td>
-            </tr>
+        <h2>Tags</h2>
+        {% for tag in project.tags %}
+            {{ tag.name }}{% if not loop.last %}, {% endif %}
         {% endfor %}
-        </tbody>
-    </table>
-    <h2>Tags</h2>
-    <h3>Current tags</h3>
-    {% for tag in project.tags %}
-        {{ tag.name }}{% if not loop.last %}, {% endif %}
-    {% endfor %}
-    {# Form to add/remove tags here #}
+        <input type="text" placeholder="Add a tag">
+
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            {# todo: fix the bug when changing months we don't add a full week (6 days instead of 7 change) #}
+            var nav = $('.js-calendar-nav');
+            nav.on('click', '.js-next', function (e) {
+                var weekCommencing = e.delegateTarget.getAttribute('data-weekCommencing');
+                var currentDate = parseDate(weekCommencing);
+                currentDate.setDate(currentDate.getDate()+7);
+                var newUrl = '{{ path('project_single', {project: project.id}) }}'+'?weekCommencing='+ currentDate.getDate() + '-' + currentDate.getMonth() + '-' + currentDate.getFullYear();
+                window.location.replace(newUrl)
+            });
+
+            nav.on('click', '.js-previous', function (e) {
+                var weekCommencing = e.delegateTarget.getAttribute('data-weekCommencing');
+                var currentDate = parseDate(weekCommencing);
+                currentDate.setDate(currentDate.getDate()-7);
+                var newUrl = '{{ path('project_single', {project: project.id}) }}'+'?weekCommencing='+ currentDate.getDate() + '-' + currentDate.getMonth() + '-' + currentDate.getFullYear();
+                window.location.replace(newUrl)
+            });
+
+            $('button.js-planned-hours').on('click', function (e) {
+                var tableBody = $('tbody.js-planned-hours');
+                var authorRows = tableBody.find('tr');
+
+                var hourData = [];
+                authorRows.each(function () {
+                    var authorId = $(this).data('author-id');
+                    var hourInput = $(this).find('input[type="number"]').val();
+                    if (hourInput === '') {
+                        hourInput = 0;
+                    }
+
+                    hourData.push({
+                        'authorId': authorId,
+                        'hours': hourInput
+                    });
+                });
+
+                var requestData = {
+                    'projectId': tableBody.data('project'),
+                    'weekCommencing': $('.js-calendar-nav').data('weekcommencing'),
+                    'plannedHours': hourData
+                };
+
+                console.table(requestData);
+
+
+                $.ajax({
+                    url: '{{ path('planned_hours_create_or_update') }}',
+                    method: 'POST',
+                    data: requestData,
+                    dataType: 'JSON',
+                    success: function (responseData) {
+                        toastr.success('Planned hours updated successfully');
+                    },
+                    error: function (responseData) {
+                        toastr.error('Sorry there was an error. Check the console for more information.');
+                        console.log('error: ' + responseData)
+                    }
+                });
+            })
+        });
+
+        function parseDate(input) {
+            var parts = input.match(/(\d+)/g);
+            return new Date(parts[2], parts[1], parts[0]);
+        }
+    </script>
 {% endblock %}
