@@ -18,7 +18,7 @@ class CarbonIntervalFormatter extends AbstractExtension
     public function carbonInterval($interval): string
     {
         $carbonInterval = $this->dateIntervalToCarbonInterval($interval);
-        return $carbonInterval->forHumans();
+        return $carbonInterval->forHumans(['options' => 0]);
     }
 
     /**
