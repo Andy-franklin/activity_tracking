@@ -6,10 +6,13 @@ use App\Entity\ActivityItem;
 use App\Entity\ActivityLog;
 use App\Entity\Author;
 use App\Entity\Tag;
+use App\Repository\ActivityLogRepository;
 use App\Repository\AuthorRepository;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -34,10 +37,21 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
      * @var TagRepository
      */
     private $tagRepository;
+
     /**
      * @var AuthorRepository
      */
     private $authorRepository;
+
+    /**
+     * @var ActivityLogRepository
+     */
+    private $activityLogRepository;
+
+    /**
+     * @var array
+     */
+    private $rawActivityData;
 
     /**
      * ActivityLogUploadSubscriber constructor.
@@ -46,24 +60,34 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
      * @param EntityManagerInterface $entityManager
      * @param TagRepository          $tagRepository
      * @param AuthorRepository       $authorRepository
+     * @param ActivityLogRepository  $activityLogRepository
      */
     public function __construct(
         string $activityLogDirectory,
         EntityManagerInterface $entityManager,
         TagRepository $tagRepository,
-        AuthorRepository $authorRepository
+        AuthorRepository $authorRepository,
+        ActivityLogRepository $activityLogRepository
     )
     {
         $this->activityLogDirectory = $activityLogDirectory;
         $this->entityManager = $entityManager;
         $this->tagRepository = $tagRepository;
         $this->authorRepository = $authorRepository;
+        $this->activityLogRepository = $activityLogRepository;
     }
 
-
-    public function setActivityLog(ActivityLog $activityLog): void
+    public function setActivityLog(ActivityLog $activityLog): bool
     {
         $this->activityLog = $activityLog;
+
+        if ($this->isContentUnique()) {
+            return true;
+        }
+
+        $this->activityLog = null;
+        return false;
+
     }
 
     /**
@@ -76,6 +100,36 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
                 ['processActivityLogFile', 0]
             ]
         ];
+    }
+
+    private function readContent(): void
+    {
+        $filename = $this->activityLogDirectory . '/' .$this->activityLog->getUploadedLog();
+
+        $rawActivityData = [];
+        if (($handle = fopen($filename, 'rb')) !== false) {
+            while (($data = fgetcsv($handle, ',')) !== false) {
+                $rawActivityData[] = $data;
+            }
+        }
+        fclose($handle);
+
+        array_shift($rawActivityData);
+
+        $this->rawActivityData = $rawActivityData;
+    }
+
+    private function isContentUnique(): bool
+    {
+        $this->readContent();
+
+        $contentHash = md5(json_encode($this->rawActivityData));
+
+        $existingLog = $this->activityLogRepository->findOneBy(['user' => $this->activityLog->getUser(), 'contentHash' => $contentHash]);
+
+        $this->activityLog->setContentHash($contentHash);
+
+        return null === $existingLog;
     }
 
     /**
@@ -92,20 +146,8 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $filename = $this->activityLogDirectory . '/' .$this->activityLog->getUploadedLog();
-
-        $rawActivityData = [];
-        if (($handle = fopen($filename, 'rb')) !== false) {
-            while (($data = fgetcsv($handle, ',')) !== false) {
-                $rawActivityData[] = $data;
-            }
-        }
-        fclose($handle);
-
-        array_shift($rawActivityData);
-
-        //Reverse the order of the array as workingon order is newest first
-        $rawActivityData = array_reverse($rawActivityData);
+        //Reverse the order of the array as working on order is newest first
+        $rawActivityData = array_reverse($this->rawActivityData);
 
         $user = $this->activityLog->getUser();
         $activityItems = [];
@@ -160,8 +202,8 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
                 //Todo: Ensure that the csv is grouped by author and ordered by startTime.
                 $nextTask = null;
             }
-            /** @var \DateTime $timeOfTask */
-            $timeOfTask = $currentActivityItem->getStartTime();
+            /** @var \DateTimeImmutable $timeOfTask */
+            $timeOfTask = \DateTimeImmutable::createFromMutable($currentActivityItem->getStartTime());
 
             if (null !== $nextTask) {
                 //We have another task after this, current task ended when
@@ -171,12 +213,12 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
                 //There is no next activity - if this time is after home time
                 //we should assume that this is a 5:30 finish unless the time is
                 //already past 5:30, then we should go just ignore this duration
-                $hour = $timeOfTask->format('H');
-                $minute = $timeOfTask->format('mm');
+                $hour = (int)$timeOfTask->format('H');
+                $minute = (int)$timeOfTask->format('m');
 
-                if ($hour <= 5 && $minute < 30) { //todo: extract to parameters
-                    //Home time!
-                    $endTime = $timeOfTask->setTime(5, 30, 00);
+                if (($hour <= 17 && $minute <= 30) || $key === 0) { //todo: extract to parameters
+                    //Home time! or The task has been worked on all day and no home tag is present
+                    $endTime = $timeOfTask->setTime(17, 30, 00);
                 } else {
                     //todo: we need to check if this is a #home tag before doing this
                     $endTime = $timeOfTask;

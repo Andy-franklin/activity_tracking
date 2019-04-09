@@ -17,7 +17,10 @@
     <body>
         {% block messages %}
             {% for message in app.flashes('success') %}
-                {{ message }}
+                <script>toastr.success('{{ message }}');</script>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <script>toastr.error('{{ message }}');</script>
             {% endfor %}
         {% endblock %}
         {% block body %}{% endblock %}

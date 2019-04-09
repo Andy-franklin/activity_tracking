@@ -1,6 +1,10 @@
-<h1>Upload an activity log</h1>
+{% extends 'base.html.twig' %}
 
-{{ form_start(form) }}
+{% block body %}
+    <h1>Upload an activity log</h1>
+
+    {{ form_start(form) }}
     {{ form_row(form.uploadedLog) }}
     {{ form_row(form.submit) }}
-{{ form_end(form) }}
+    {{ form_end(form) }}
+{% endblock %}

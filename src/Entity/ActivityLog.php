@@ -33,6 +33,11 @@ class ActivityLog
     private $uploadedLog;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $contentHash;
+
+    /**
      * @return mixed
      */
     public function getId()
@@ -88,6 +93,26 @@ class ActivityLog
     public function setUploadedLog($uploadedLog)
     {
         $this->uploadedLog = $uploadedLog;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getContentHash()
+    {
+        return $this->contentHash;
+    }
+
+    /**
+     * @param mixed $contentHash
+     *
+     * @return ActivityLog
+     */
+    public function setContentHash($contentHash)
+    {
+        $this->contentHash = $contentHash;
 
         return $this;
     }

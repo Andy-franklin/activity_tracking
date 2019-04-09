@@ -63,13 +63,16 @@ class ActivityLogController extends AbstractController
             $activityLog->setUploadedLog($fileName);
             $activityLog->setUser($this->getUser());
 
-            $this->entityManager->persist($activityLog);
-            $this->entityManager->flush();
+            if (true === $this->activityLogUploadSubscriber->setActivityLog($activityLog)) {
+                $this->addFlash('success', 'Your file has been added to the queue for processing');
 
-            $this->addFlash('success', 'Your file has been added to the queue for processing');
-            $this->activityLogUploadSubscriber->setActivityLog($activityLog);
+                $this->entityManager->persist($activityLog);
+                $this->entityManager->flush();
 
-//            return $this->redirectToRoute('index'); //todo: put this back in
+                return $this->redirectToRoute('authed_dashboard');
+            }
+
+            $this->addFlash('error', 'You have already processed this activity file!');
         }
 
         return $this->render('activityLog/new.html.twig', [
