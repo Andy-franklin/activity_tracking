@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <div class="row mb-4 mt-4">
+            <div class="col">
+                {% if true %}
+                    <p>If you are happy with the categorisation of this activity log mark it as complete.</p>
+                    <button type="button" class="btn btn-outline-success">Mark complete</button>
+                {% else %}
+                    <p>If you have changed your mind and want to review this again later mark this activity log as incomplete</p>
+                    <button type="button" class="btn btn-outline-success">Mark incomplete</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                {% if activityItems.uncategorised|length > 0 %}
+                    <p>You have some activity items not categorised.
+                        <br/>As a result they will not appear on any project.
+                        <br/>Add them to a project by adding a project tag.
+                    </p>
+                    <p></p>
+                    <div class="row">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                <tr class="table-danger">
+                                    <td>Author</td>
+                                    <td>Task</td>
+                                    <td>Duration</td>
+                                    <td>Tags</td>
+                                    <td></td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for uncategorisedItem in activityItems.uncategorised %}
+                                        {% include 'activityLog/item/single.html.twig' with {activityItem: uncategorisedItem} %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                {% if activityItems.categorised|length > 0 %}
+                    <p>These activities are already associated with a project.<br/>
+                        You can modify their association by changing their project tags.
+                    </p>
+                    <div class="row">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr class="table-success">
+                                        <td>Author</td>
+                                        <td>Task</td>
+                                        <td>Duration</td>
+                                        <td>Tags</td>
+                                        <td></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for categorisedItem in activityItems.categorised %}
+                                        {% include 'activityLog/item/single.html.twig' with {activityItem: categorisedItem} %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
+</script>
+{% endblock %}
+

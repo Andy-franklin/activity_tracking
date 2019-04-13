@@ -3,13 +3,14 @@
 
 namespace App\Entity;
 
+use App\Exception\UnauthorizedException;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ProjectRepository")
  * @ORM\Table(name="project")
  */
-class Project
+class Project implements UserResourceInterface
 {
     /**
      * @ORM\Id
@@ -67,5 +68,15 @@ class Project
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param User $user
+     */
+    public function denyUnlessOwner(User $user): void
+    {
+        if ($this->user !== $user) {
+            throw new UnauthorizedException();
+        }
     }
 }

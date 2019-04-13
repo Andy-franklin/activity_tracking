@@ -80,4 +80,20 @@ class Tag
     {
         return $this->name;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getProjects()
+    {
+        return $this->projects;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActivityItems()
+    {
+        return $this->activityItems;
+    }
 }

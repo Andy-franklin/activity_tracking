@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\ActivityItem;
 use App\Entity\ActivityLog;
+use App\Entity\Tag;
 use App\EventSubscriber\ActivityLogUploadSubscriber;
 use App\Form\ActivityLogType;
+use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -22,20 +25,27 @@ class ActivityLogController extends AbstractController
      * @var ActivityLogUploadSubscriber
      */
     private $activityLogUploadSubscriber;
+    /**
+     * @var ProjectRepository
+     */
+    private $projectRepository;
 
     /**
      * ActivityLogController constructor.
      *
      * @param EntityManagerInterface      $entityManager
      * @param ActivityLogUploadSubscriber $activityLogUploadSubscriber
+     * @param ProjectRepository           $projectRepository
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        ActivityLogUploadSubscriber $activityLogUploadSubscriber
+        ActivityLogUploadSubscriber $activityLogUploadSubscriber,
+        ProjectRepository $projectRepository
     )
     {
         $this->entityManager = $entityManager;
         $this->activityLogUploadSubscriber = $activityLogUploadSubscriber;
+        $this->projectRepository = $projectRepository;
     }
 
     public function new(Request $request)
@@ -77,6 +87,42 @@ class ActivityLogController extends AbstractController
 
         return $this->render('activityLog/new.html.twig', [
             'form' => $form->createView(),
+        ]);
+    }
+
+    public function single(Request $request, ActivityLog $activityLog)
+    {
+        $activityLog->denyUnlessOwner($this->getUser());
+
+        $categorisedActivityItems = $uncategorisedActivityItems = [];
+
+        /** @var ActivityItem $activityItem */
+        foreach ($activityLog->getActivityItems() as $activityItem) {
+            $categorised = false;
+            $tags = $activityItem->getTags();
+
+            /** @var Tag $tag */
+            foreach ($tags as $tag) {
+                $projects = $tag->getProjects();
+
+                if (\count($projects) > 0) {
+                    $categorisedActivityItems[] = $activityItem;
+                    $categorised = true;
+                    break;
+                }
+            }
+
+            if (false === $categorised) {
+                $uncategorisedActivityItems[] = $activityItem;
+            }
+        }
+
+        return $this->render('activityLog/single.html.twig', [
+            'activityItems' => [
+                'uncategorised' => $uncategorisedActivityItems,
+                'categorised' => $categorisedActivityItems,
+            ],
+            'activityLog' => $activityLog
         ]);
     }
 }

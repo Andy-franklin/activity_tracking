@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Error {{ status_code }}
+{% endblock %}
+
+{% block body %}
+    <h1>Error | {{ status_text }}</h1>
+    <p>Return to safety <a href="{{ path('authed_dashboard') }}">here</a></p>
+{% endblock %}

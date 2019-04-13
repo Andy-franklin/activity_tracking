@@ -1,0 +1,13 @@
+<tr>
+    <td>{{ activityItem.author.name }}</td>
+    <td>{{ activityItem.title }}</td>
+    <td>{{ activityItem.duration|carbonInterval }}</td>
+    <td>
+        {% for tag in activityItem.tags %}
+            {{ tag.name }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </td>
+    <td>
+        <button type="button" class="btn btn-outline-secondary" data-toggle="popover" title="Update Activity" data-html="true" data-content="{% include 'activityLog/item/modify.html.twig' %}">Modify</button>
+    </td>
+</tr>

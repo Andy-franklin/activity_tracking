@@ -6,6 +6,7 @@ use App\Entity\ActivityItem;
 use App\Entity\Author;
 use App\Entity\PlannedHours;
 use App\Entity\Project;
+use App\Exception\NonMondayException;
 use App\Form\ProjectType;
 use App\Repository\ActivityItemRepository;
 use App\Repository\AuthorRepository;
@@ -21,10 +22,6 @@ class ProjectController extends AbstractController
      * @var EntityManagerInterface
      */
     private $entityManager;
-    /**
-     * @var ProjectRepository
-     */
-    private $projectRepository;
     /**
      * @var ActivityItemRepository
      */
@@ -56,7 +53,6 @@ class ProjectController extends AbstractController
     )
     {
         $this->entityManager = $entityManager;
-        $this->projectRepository = $projectRepository;
         $this->activityItemRepository = $activityItemRepository;
         $this->authorRepository = $authorRepository;
         $this->plannedHoursRepository = $plannedHoursRepository;
@@ -88,19 +84,20 @@ class ProjectController extends AbstractController
 
     public function single(Request $request, Project $project)
     {
+        $project->denyUnlessOwner($this->getUser());
+
         $weekCommencing = $request->get('weekCommencing');
         if (null !== $weekCommencing) {
             try {
                 $monday = \DateTimeImmutable::createFromFormat('d-m-Y', $weekCommencing)->setTime(0,0,0,0);
                 $sunday = $monday->add(\DateInterval::createFromDateString('+ 7 days'));
-                if ($monday->format('l') !== 'Monday') {
-                    //If we aren't on a monday throw an error
-                    throw new \RuntimeException(sprintf('Expected Monday but got %s', $monday->format('l')));
-                }
-            } catch (\RuntimeException $runtimeException) {
-                throw $runtimeException;
             } catch (\Exception $exception) {
                 throw new \RuntimeException('The date format is incorrect');
+            }
+
+            if ($monday->format('l') !== 'Monday') {
+                //If we aren't on a monday throw an error
+                throw new NonMondayException(sprintf('Expected Monday but got %s', $monday->format('l')));
             }
         } else {
             $monday = new \DateTime('Monday this week');

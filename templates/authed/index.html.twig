@@ -13,7 +13,7 @@
     <a href="{{ path('activity_log_new') }}">New activity log</a>
     <ul>
     {% for activityLog in activityLogs %}
-        <li><a href="">{{ activityLog.id }}</a></li>
+        <li><a href="{{ path('activity_log_single', {activityLog: activityLog.id}) }}">{{ activityLog.id }}</a></li>
     {% endfor %}
     </ul>
     <h2>Author Breakdown</h2>

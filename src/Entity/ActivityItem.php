@@ -44,7 +44,7 @@ class ActivityItem
     private $duration;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ActivityLog")
+     * @ORM\ManyToOne(targetEntity="ActivityLog", inversedBy="activityItems")
      * @ORM\JoinColumn(name="activity_log_id", referencedColumnName="id")
      */
     private $activityLog;

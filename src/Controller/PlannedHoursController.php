@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\PlannedHours;
+use App\Exception\NonMondayException;
+use App\Exception\UnauthorizedException;
 use App\Repository\AuthorRepository;
 use App\Repository\PlannedHoursRepository;
 use App\Repository\ProjectRepository;
@@ -61,24 +63,23 @@ class PlannedHoursController extends AbstractController
         $user = $this->getUser();
         $project = $this->projectRepository->findOneBy(['user' => $user, 'id' => $projectId]);
         if (null === $project) {
-            return new JsonResponse('Project not found', 404);
+            throw new UnauthorizedException('Project not found');
         }
 
         $monday = \DateTimeImmutable::createFromFormat('d-m-Y', $weekCommencing)->setTime(0,0,0,0);
         if ($monday->format('l') !== 'Monday') {
-            //If we aren't on a monday throw an error
-            return new JsonResponse(sprintf('Expected Monday but got %s', $monday->format('l')), 400);
+            throw new NonMondayException(sprintf('Expected Monday but got %s', $monday->format('l')));
         }
 
         foreach ($plannedHours as $plannedHour) {
             $authorId = $plannedHour['authorId'];
             $author = $this->authorRepository->findOneBy(['id' => $authorId, 'user' => $user]);
             if (null === $author) {
-                return new JsonResponse('Author not found', 404);
+                throw new UnauthorizedException('Author not found');
             }
             $hours = $plannedHour['hours'];
             if (!is_numeric($hours)) {
-                return new JsonResponse('Hours is not numeric', 400);
+                throw new UnauthorizedException('Project not found');
             }
 
             /** @var PlannedHours $existingPlannedHours */

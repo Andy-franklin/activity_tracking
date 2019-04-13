@@ -2,14 +2,15 @@
 
 namespace App\Entity;
 
+use App\Exception\UnauthorizedException;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Entity(repositoryClass="")
+ * @ORM\Entity(repositoryClass="App\Repository\ActivityLogRepository")
  * @ORM\Table(name="activity_log_files")
  */
-class ActivityLog
+class ActivityLog implements UserResourceInterface
 {
     /**
      * @ORM\Id
@@ -36,6 +37,11 @@ class ActivityLog
      * @ORM\Column(type="string", nullable=true)
      */
     private $contentHash;
+
+    /**
+     * @ORM\OneToMany(targetEntity="ActivityItem", mappedBy="activityLog")
+     */
+    private $activityItems;
 
     /**
      * @return mixed
@@ -115,5 +121,23 @@ class ActivityLog
         $this->contentHash = $contentHash;
 
         return $this;
+    }
+
+    /**
+     * @param User $user
+     */
+    public function denyUnlessOwner(User $user): void
+    {
+        if ($this->user !== $user) {
+            throw new UnauthorizedException();
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActivityItems()
+    {
+        return $this->activityItems;
     }
 }

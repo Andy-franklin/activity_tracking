@@ -10,6 +10,10 @@ activity_log_new:
     path: /authed/activitylog/new
     controller: App\Controller\ActivityLogController::new
 
+activity_log_single:
+    path: /authed/activitylog/{activityLog}
+    controller: App\Controller\ActivityLogController::single
+
 project_new:
     path: /authed/project/new
     controller: App\Controller\ProjectController::new
