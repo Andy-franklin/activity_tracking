@@ -3,9 +3,12 @@
 namespace App\EventSubscriber;
 
 use App\Entity\ActivityItem;
+use App\Entity\ActivityItemTaskLink;
 use App\Entity\ActivityLog;
 use App\Entity\Author;
 use App\Entity\Tag;
+use App\Entity\TaskTracker;
+use App\Entity\User;
 use App\Repository\ActivityLogRepository;
 use App\Repository\AuthorRepository;
 use App\Repository\TagRepository;
@@ -195,6 +198,8 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
         //We have all our activity items - calculate the duration of each item per author.
         /** @var ActivityItem $currentActivityItem */
         foreach ($activityItems as $key => $currentActivityItem) {
+            $this->extractTaskTrackerStrings($currentActivityItem);
+
             if (isset($activityItems[$key+1]) && $currentActivityItem->getAuthor() === $activityItems[$key+1]->getAuthor()) {
                 $nextTask = $activityItems[$key+1];
             } else {
@@ -202,30 +207,9 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
                 //Todo: Ensure that the csv is grouped by author and ordered by startTime.
                 $nextTask = null;
             }
-            /** @var \DateTimeImmutable $timeOfTask */
-            $timeOfTask = \DateTimeImmutable::createFromMutable($currentActivityItem->getStartTime());
 
-            if (null !== $nextTask) {
-                //We have another task after this, current task ended when
-                //the next one started
-                $endTime = $nextTask->getStartTime();
-            } else {
-                //There is no next activity - if this time is after home time
-                //we should assume that this is a 5:30 finish unless the time is
-                //already past 5:30, then we should go just ignore this duration
-                $hour = (int)$timeOfTask->format('H');
-                $minute = (int)$timeOfTask->format('m');
+            $duration = $this->calculateDuration($currentActivityItem, $nextTask);
 
-                if (($hour <= 17 && $minute <= 30) || $key === 0) { //todo: extract to parameters
-                    //Home time! or The task has been worked on all day and no home tag is present
-                    $endTime = $timeOfTask->setTime(17, 30, 00);
-                } else {
-                    //todo: we need to check if this is a #home tag before doing this
-                    $endTime = $timeOfTask;
-                }
-            }
-
-            $duration = $timeOfTask->diff($endTime);
             $currentActivityItem->setDuration($duration);
             $this->entityManager->persist($currentActivityItem);
         }
@@ -241,5 +225,55 @@ class ActivityLogUploadSubscriber implements EventSubscriberInterface
             $keywords[] = $tag;
         }
         return $keywords;
+    }
+
+    private function calculateDuration(ActivityItem $currentItem, ?ActivityItem $nextItem): \DateInterval
+    {
+        /** @var \DateTimeImmutable $timeOfTask */
+        $timeOfTask = \DateTimeImmutable::createFromMutable($currentItem->getStartTime());
+
+        if (null !== $nextItem) {
+            //We have another task after this, current task ended when
+            //the next one started
+            $endTime = $nextItem->getStartTime();
+        } else {
+            //There is no next activity - if this time is after home time
+            //we should assume that this is a 5:30 finish unless the time is
+            //already past 5:30, then we should go just ignore this duration
+            $hour = (int)$timeOfTask->format('H');
+            $minute = (int)$timeOfTask->format('m');
+
+            if ($hour <= 17 && $minute <= 30) { //todo: extract to parameters
+                //Home time! or The task has been worked on all day and no home tag is present
+                $endTime = $timeOfTask->setTime(17, 30, 00);
+            } else {
+                //todo: we need to check if this is a #home tag before doing this
+                $endTime = $timeOfTask;
+            }
+        }
+
+        return $timeOfTask->diff($endTime);
+    }
+
+    private function extractTaskTrackerStrings(ActivityItem $activityItem): void
+    {
+        /** @var User $user */
+        $user = $this->activityLog->getUser();
+        $userTaskTrackers = $user->getTaskTrackers();
+
+        /** @var TaskTracker $taskTracker */
+        foreach ($userTaskTrackers as $taskTracker) {
+            $prefix = $taskTracker->getPrefix();
+            preg_match_all('/(' . $prefix . '\w+)/', $activityItem->getTitle(), $matches);
+
+            foreach ($matches[0] as $match) {
+                $activityItemTaskLink = (new ActivityItemTaskLink())
+                    ->setParameter($match)
+                    ->setActivityItem($activityItem)
+                ;
+
+                $activityItem->addTaskLink($activityItemTaskLink);
+            }
+        }
     }
 }

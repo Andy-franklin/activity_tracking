@@ -50,6 +50,11 @@ class ActivityItem
     private $activityLog;
 
     /**
+     * @ORM\OneToMany(targetEntity="ActivityItemTaskLink", mappedBy="activityItem", cascade={"persist"})
+     */
+    private $taskLinks;
+
+    /**
      * ActivityItem constructor.
      *
      * @param string      $title
@@ -184,6 +189,26 @@ class ActivityItem
     public function setActivityLog($activityLog)
     {
         $this->activityLog = $activityLog;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTaskLinks()
+    {
+        return $this->taskLinks;
+    }
+
+    /**
+     * @param $taskLink
+     *
+     * @return ActivityItem
+     */
+    public function addTaskLink($taskLink)
+    {
+        $this->taskLinks[] = $taskLink;
 
         return $this;
     }

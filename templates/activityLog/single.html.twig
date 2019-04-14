@@ -37,6 +37,7 @@
                                 <tbody>
                                     {% for uncategorisedItem in activityItems.uncategorised %}
                                         {% include 'activityLog/item/single.html.twig' with {activityItem: uncategorisedItem} %}
+                                        {% include 'activityLog/item/modify.html.twig' with {activityItem: uncategorisedItem} %}
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -67,6 +68,7 @@
                                 <tbody>
                                     {% for categorisedItem in activityItems.categorised %}
                                         {% include 'activityLog/item/single.html.twig' with {activityItem: categorisedItem} %}
+                                        {% include 'activityLog/item/modify.html.twig' with {activityItem: categorisedItem} %}
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -76,13 +78,7 @@
             </div>
         </div>
     </div>
-{% endblock %}
 
-{% block javascripts %}
-<script>
-    $(function () {
-        $('[data-toggle="popover"]').popover()
-    })
-</script>
+
 {% endblock %}
 

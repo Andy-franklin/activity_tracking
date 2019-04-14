@@ -25,10 +25,35 @@ class User extends BaseUser
     private $tags;
 
     /**
+     * @ORM\OneToMany(targetEntity="TaskTracker", mappedBy="user")
+     */
+    private $taskTrackers;
+
+    /**
      * @return mixed
      */
     public function getTags()
     {
         return $this->tags;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTaskTrackers()
+    {
+        return $this->taskTrackers;
+    }
+
+    /**
+     * @param mixed $taskTrackers
+     *
+     * @return User
+     */
+    public function setTaskTrackers($taskTrackers)
+    {
+        $this->taskTrackers = $taskTrackers;
+
+        return $this;
     }
 }

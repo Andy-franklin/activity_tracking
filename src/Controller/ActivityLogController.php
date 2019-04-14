@@ -92,7 +92,9 @@ class ActivityLogController extends AbstractController
 
     public function single(Request $request, ActivityLog $activityLog)
     {
-        $activityLog->denyUnlessOwner($this->getUser());
+        $user = $this->getUser();
+
+        $activityLog->denyUnlessOwner($user);
 
         $categorisedActivityItems = $uncategorisedActivityItems = [];
 
@@ -117,12 +119,17 @@ class ActivityLogController extends AbstractController
             }
         }
 
+        $projects = $this->projectRepository->findBy([
+            'user' => $user
+        ]);
+
         return $this->render('activityLog/single.html.twig', [
             'activityItems' => [
                 'uncategorised' => $uncategorisedActivityItems,
                 'categorised' => $categorisedActivityItems,
             ],
-            'activityLog' => $activityLog
+            'activityLog' => $activityLog,
+            'projects' => $projects,
         ]);
     }
 }
